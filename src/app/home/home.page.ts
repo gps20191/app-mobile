@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { WebView } from '@ionic-native/ionic-webview/ngx';
 import { Storage } from '@ionic/storage';
 import { FilePath } from '@ionic-native/file-path/ngx';
-
+import { Geolocation } from '@ionic-native/geolocation/ngx';
 import { finalize } from 'rxjs/operators';
 import { post } from 'selenium-webdriver/http';
 
@@ -22,9 +22,9 @@ export class HomePage {
     images: any;
 
     constructor(private camera: Camera, private file: File, private http: HttpClient, private webview: WebView,
-                private actionSheetController: ActionSheetController, private toastController: ToastController,
-                private plt: Platform, private loadingController: LoadingController,
-                private filePath: FilePath) {
+        private actionSheetController: ActionSheetController, private toastController: ToastController,
+        private plt: Platform, private loadingController: LoadingController, private geolocation: Geolocation,
+        private filePath: FilePath) {
     }
 
     pathForImage(img) {
@@ -87,11 +87,21 @@ export class HomePage {
             this.images = 'data:image/jpeg;base64,' + imagePath;
             const blob = this.b64toBlob(imagePath, 'image/jpeg');
             const url = URL.createObjectURL(blob);
+
+            this.geolocation.getCurrentPosition().then((resp) => {
+                // resp.coords.latitude
+                // resp.coords.longitude
+            }).catch((error) => {
+                console.log('Error getting location', error);
+            });
+
             // this.startUpload(url, this.createFileName());
         })
             .catch(err => {
                 this.presentToast('Erro na captura da imagem.');
             });
+
+
     }
 
     private b64toBlob(b64Data, contentType = '', sliceSize = 512) {
@@ -125,7 +135,7 @@ export class HomePage {
         oReq.open('POST', server, true);
         // Send the proper header information along with the request
         // xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        oReq.onload = function(oEvent) {
+        oReq.onload = function (oEvent) {
             // all done!
         };
         // Pass the blob in to XHR's send method

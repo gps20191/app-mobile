@@ -15,7 +15,7 @@ import { Camera } from '@ionic-native/Camera/ngx';
 import { File } from '@ionic-native/File/ngx';
 import { WebView } from '@ionic-native/ionic-webview/ngx';
 import { FilePath } from '@ionic-native/file-path/ngx';
-import { FileTransfer } from '@ionic-native/file-transfer/ngx';
+
 
 import { IonicStorageModule } from '@ionic/storage';
 @NgModule({
@@ -30,7 +30,6 @@ import { IonicStorageModule } from '@ionic/storage';
     File,
     WebView,
     FilePath,
-      FileTransfer
   ],
   bootstrap: [AppComponent]
 })

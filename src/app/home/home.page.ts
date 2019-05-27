@@ -1,16 +1,14 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { Camera, CameraOptions, PictureSourceType } from '@ionic-native/Camera/ngx';
-import { ActionSheetController, ToastController, Platform, LoadingController } from '@ionic/angular';
-import { File, FileEntry } from '@ionic-native/File/ngx';
+import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+
+import { Camera, CameraOptions, PictureSourceType } from '@ionic-native/Camera/ngx';
+import { ActionSheetController, ToastController, LoadingController, NavController, ModalController } from '@ionic/angular';
+import { File } from '@ionic-native/File/ngx';
 import { WebView } from '@ionic-native/ionic-webview/ngx';
-import { Storage } from '@ionic/storage';
-import { FilePath } from '@ionic-native/file-path/ngx';
 import { Geolocation } from '@ionic-native/geolocation/ngx';
+
 import { finalize } from 'rxjs/operators';
 import { post } from 'selenium-webdriver/http';
-
-const STORAGE_KEY = 'my_images';
 
 @Component({
     selector: 'app-home',
@@ -21,19 +19,14 @@ export class HomePage {
 
     images: any;
 
-    constructor(private camera: Camera, private file: File, private http: HttpClient, private webview: WebView,
-        private actionSheetController: ActionSheetController, private toastController: ToastController,
-        private plt: Platform, private loadingController: LoadingController, private geolocation: Geolocation,
-        private filePath: FilePath) {
+    constructor(private camera: Camera, private file: File, private webview: WebView, private nav: NavController,
+                private actionSheetController: ActionSheetController, private toastController: ToastController,
+                private loadingController: LoadingController, private geolocation: Geolocation,
+                private http: HttpClient, private modalController: ModalController) {
     }
 
-    pathForImage(img) {
-        if (img === null) {
-            return '';
-        } else {
-            const converted = this.webview.convertFileSrc(img);
-            return converted;
-        }
+    onClick() {
+        this.nav.navigateForward('informacao');
     }
 
     async presentToast(text) {
@@ -70,6 +63,7 @@ export class HomePage {
     }
 
     takePicture(sourceType: PictureSourceType) {
+        this.images = '';
         const options: CameraOptions = {
             // allowEdit: true,
             correctOrientation: true,
@@ -80,28 +74,23 @@ export class HomePage {
             encodingType: this.camera.EncodingType.JPEG,
         };
 
-        this.camera.getPicture(options).then(imagePath => {
-            // console.log('aqui', imagePath);
-            // const currentName = imagePath.substr(imagePath.lastIndexOf('/') + 1);
-            // const correctPath = imagePath.substr(0, imagePath.lastIndexOf('/') + 1);
-            this.images = 'data:image/jpeg;base64,' + imagePath;
-            const blob = this.b64toBlob(imagePath, 'image/jpeg');
-            const url = URL.createObjectURL(blob);
+        this.camera.getPicture(options)
+            .then(imagePath => {
+                this.images = 'data:image/jpeg;base64,' + imagePath;
+                const blob = this.b64toBlob(imagePath, 'image/jpeg');
+                const url = URL.createObjectURL(blob);
 
-            this.geolocation.getCurrentPosition().then((resp) => {
-                // resp.coords.latitude
-                // resp.coords.longitude
-            }).catch((error) => {
-                console.log('Error getting location', error);
-            });
-
-            // this.startUpload(url, this.createFileName());
-        })
-            .catch(err => {
+                this.geolocation.getCurrentPosition()
+                    .then((resp) => {
+                        console.log(resp);
+                        // resp.coords.latitude
+                        // resp.coords.longitude
+                    }).catch((error) => {
+                        console.log('Error getting location', error);
+                    });
+            }).catch(err => {
                 this.presentToast('Erro na captura da imagem.');
             });
-
-
     }
 
     private b64toBlob(b64Data, contentType = '', sliceSize = 512) {
@@ -120,40 +109,28 @@ export class HomePage {
         return blob;
     }
 
-    createFileName() {
-        const d = new Date(),
-            n = d.getTime(),
-            newFileName = n + '.jpg';
-        return newFileName;
-    }
-
-    startUpload(imgEntry, namePhoto) {
-        let postData = new FormData();
+    async startUpload(imgEntry) {
+        const postData = new FormData();
         postData.append('image', imgEntry);
-        const oReq = new XMLHttpRequest();
-        const server = 'http://192.168.1.1/upload.php';
-        oReq.open('POST', server, true);
-        // Send the proper header information along with the request
-        // xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        oReq.onload = function (oEvent) {
-            // all done!
-        };
-        // Pass the blob in to XHR's send method
-        oReq.send(postData);
-        console.log('fim');
-    }
 
-    readFile(file: any) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const formData = new FormData();
-            const imgBlob = new Blob([reader.result], {
-                type: file.type
-            });
-            formData.append('file', imgBlob, file.name);
+        const loading = await this.loadingController.create({
+            message: 'Uploading image...',
+        });
+        await loading.present();
 
-        };
-        reader.readAsArrayBuffer(file);
+        this.http.post('http://api-denuncia.herokuapp.com/api/v1/complaint', "dados", {})
+        .pipe(
+            finalize(() => {
+                loading.dismiss();
+            })
+        )
+        .subscribe(res => {
+            console.log(res);
+            if (res['success']) {
+                this.presentToast('File upload complete.');
+            } else {
+                this.presentToast('File upload failed.');
+            }
+        });
     }
 }
-

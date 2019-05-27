@@ -1,18 +1,17 @@
 <ion-header>
   <ion-toolbar color="primary">
     <ion-title>
-      I'm Here
+      GPS 20191
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content padding>
-  <ion-thumbnail slot="start">
-    <ion-img src="images"></ion-img>
-  </ion-thumbnail>
-  <ion-button slot="end" fill="clear" (click)="startUpload(img)">
+<ion-content padding> 
+  <ion-img src="{{images}}"></ion-img>
+  <ion-button  fill="clear" (click)="startUpload(img)">
     <ion-icon slot="icon-only" name="cloud-upload"></ion-icon>
   </ion-button>
+  <ion-button expand="full" (click)="onClick()">Adicionar Informações</ion-button>
 </ion-content>
 
 <ion-footer>

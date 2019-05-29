@@ -6,6 +6,7 @@ import { ActionSheetController, ToastController, LoadingController, NavControlle
 import { File } from '@ionic-native/File/ngx';
 import { WebView } from '@ionic-native/ionic-webview/ngx';
 import { Geolocation } from '@ionic-native/geolocation/ngx';
+import { HTTP } from '@ionic-native/http/ngx';
 
 import { finalize } from 'rxjs/operators';
 import { post } from 'selenium-webdriver/http';
@@ -20,9 +21,9 @@ export class HomePage {
     images: any;
 
     constructor(private camera: Camera, private file: File, private webview: WebView, private nav: NavController,
-                private actionSheetController: ActionSheetController, private toastController: ToastController,
-                private loadingController: LoadingController, private geolocation: Geolocation,
-                private http: HttpClient, private modalController: ModalController) {
+        private actionSheetController: ActionSheetController, private toastController: ToastController,
+        private loadingController: LoadingController, private geolocation: Geolocation,
+        private http: HTTP, private modalController: ModalController) {
     }
 
     onClick() {
@@ -118,19 +119,18 @@ export class HomePage {
         });
         await loading.present();
 
-        this.http.post('http://api-denuncia.herokuapp.com/api/v1/complaint', "dados", {})
-        .pipe(
-            finalize(() => {
+        this.http.post('http://api-denuncia.herokuapp.com/api/v1/complaint', 'dados', {})
+            .then(data => {
+                console.log(data.status);
+                console.log(data.data); // data received by server
+                console.log(data.headers);
                 loading.dismiss();
             })
-        )
-        .subscribe(res => {
-            console.log(res);
-            if (res['success']) {
-                this.presentToast('File upload complete.');
-            } else {
-                this.presentToast('File upload failed.');
-            }
-        });
+            .catch(error => {
+                console.log(error.status);
+                console.log(error.error); // error message as string
+                console.log(error.headers);
+                loading.dismiss();
+            });
     }
 }

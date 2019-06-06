@@ -1,15 +1,10 @@
 import { Component } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 
 import { Camera, CameraOptions, PictureSourceType } from '@ionic-native/Camera/ngx';
-import { ActionSheetController, ToastController, LoadingController, NavController, ModalController } from '@ionic/angular';
-import { File } from '@ionic-native/File/ngx';
-import { WebView } from '@ionic-native/ionic-webview/ngx';
+import { ActionSheetController, ToastController, NavController } from '@ionic/angular';
 import { Geolocation } from '@ionic-native/geolocation/ngx';
-import { HTTP } from '@ionic-native/http/ngx';
 
-import { finalize } from 'rxjs/operators';
-import { post } from 'selenium-webdriver/http';
+import { DataService } from '../services/data.service';
 
 @Component({
     selector: 'app-home',
@@ -19,17 +14,20 @@ import { post } from 'selenium-webdriver/http';
 export class HomePage {
 
     images: any;
+    dados: any;
 
-    constructor(private camera: Camera, private file: File, private webview: WebView, private nav: NavController,
-        private actionSheetController: ActionSheetController, private toastController: ToastController,
-        private loadingController: LoadingController, private geolocation: Geolocation,
-        private http: HTTP, private modalController: ModalController) {
+    constructor(private camera: Camera, private nav: NavController, private actionSheetController: ActionSheetController,
+                private toastController: ToastController, private geolocation: Geolocation, private dataService: DataService
+    ) {
     }
 
+    // aciona tela de informações adicionais
     onClick() {
-        this.nav.navigateForward('informacao');
+        this.dataService.setData(1, {imagem: this.images, dados: this.dados});
+        this.nav.navigateForward('/informacao/1');
     }
 
+    // mostra mensagem na tela
     async presentToast(text) {
         const toast = await this.toastController.create({
             message: text,
@@ -39,6 +37,7 @@ export class HomePage {
         toast.present();
     }
 
+    // determina a origem da foto, camera ou galeria.
     async selectImage() {
         const actionSheet = await this.actionSheetController.create({
             header: 'Escolha a origem',
@@ -63,6 +62,8 @@ export class HomePage {
         await actionSheet.present();
     }
 
+    // pega foto da biblioteca ou da camera, sende este configuravel.
+    // falta: se não ativiar gps ou não conseguir informações deve cancelar/reiniciar o processo e mostrar mensagem.
     takePicture(sourceType: PictureSourceType) {
         this.images = '';
         const options: CameraOptions = {
@@ -83,11 +84,13 @@ export class HomePage {
 
                 this.geolocation.getCurrentPosition()
                     .then((resp) => {
-                        console.log(resp);
+                        // console.log(resp);
+                        this.dados = resp;
                         // resp.coords.latitude
                         // resp.coords.longitude
                     }).catch((error) => {
                         console.log('Error getting location', error);
+                        this.presentToast('Gps desativado/bloqueado.');
                     });
             }).catch(err => {
                 this.presentToast('Erro na captura da imagem.');
@@ -108,29 +111,5 @@ export class HomePage {
         }
         const blob = new Blob(byteArrays, { type: contentType });
         return blob;
-    }
-
-    async startUpload(imgEntry) {
-        const postData = new FormData();
-        postData.append('image', imgEntry);
-
-        const loading = await this.loadingController.create({
-            message: 'Uploading image...',
-        });
-        await loading.present();
-
-        this.http.post('http://api-denuncia.herokuapp.com/api/v1/complaint', 'dados', {})
-            .then(data => {
-                console.log(data.status);
-                console.log(data.data); // data received by server
-                console.log(data.headers);
-                loading.dismiss();
-            })
-            .catch(error => {
-                console.log(error.status);
-                console.log(error.error); // error message as string
-                console.log(error.headers);
-                loading.dismiss();
-            });
     }
 }

@@ -7,6 +7,16 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
-
+<ion-content padding>
+  <form [formGroup]="dadosForm">
+    <ion-item>
+      <ion-input formControlName="numero_carro" type='text' placeholder="Numero do Carro"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-input formControlName="numero_linha" type='text' placeholder="Numero do Linha"></ion-input>
+    </ion-item>    
+    <ion-button [disabled]="!dadosForm.valid" fill="clear" (click)="startUpload()">
+      <ion-icon slot="icon-only" name="cloud-upload"></ion-icon>
+    </ion-button>
+  </form>
 </ion-content>

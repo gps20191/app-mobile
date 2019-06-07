@@ -20,25 +20,25 @@ export class InformacaoPage implements OnInit {
     this.dadosForm = this.formBuilder.group({
       numero_carro: new FormControl('', Validators.compose([
         Validators.required,
-        // buscar padrão só de numeros
-        // Validators.pattern()
+        Validators.minLength(5),
+        Validators.maxLength(5),
+        Validators.pattern('[0-9]{5}')
       ])),
       numero_linha: new FormControl('', Validators.compose([
         Validators.required,
-        Validators.minLength(3),
-        // buscar padrão só de numeros
-        // Validators.pattern()
+        Validators.pattern('[0-9]{3}')
       ])),
     });
   }
 
+  // load storaged data.
   ngOnInit() {
     if (this.route.snapshot.data.special) {
       this.dados = this.route.snapshot.data.special;
     }
   }
 
-  // mostra mensagem na tela
+  // show text on screen
   async presentToast(text) {
     const toast = await this.toastController.create({
       message: text,
@@ -48,6 +48,7 @@ export class InformacaoPage implements OnInit {
     toast.present();
   }
 
+  // start upload process, using data from ngOnInit().
   async startUpload() {
     console.log('coord:', this.dados.dados);
     console.log('formulario:', this.dadosForm.value);

@@ -26,7 +26,7 @@ export class InformacaoPage implements OnInit {
       ])),
       numero_linha: new FormControl('', Validators.compose([
         Validators.required,
-        Validators.pattern('[0-9]{3}')
+        Validators.pattern('[0-9]{3,4}')
       ])),
     });
   }

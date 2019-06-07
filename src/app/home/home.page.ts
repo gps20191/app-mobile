@@ -14,20 +14,22 @@ import { DataService } from '../services/data.service';
 export class HomePage {
 
     images: any;
-    dados: any;
+    coord: any;
+    foto_data: any;
 
     constructor(private camera: Camera, private nav: NavController, private actionSheetController: ActionSheetController,
                 private toastController: ToastController, private geolocation: Geolocation, private dataService: DataService
     ) {
     }
 
-    // aciona tela de informações adicionais
+    // store the data, so other views can load it later.
+    // call the view informacao.
     onClick() {
-        this.dataService.setData(1, {imagem: this.images, dados: this.dados});
+        this.dataService.setData(1, {imagem: this.foto_data, coord: this.dados});
         this.nav.navigateForward('/informacao/1');
     }
 
-    // mostra mensagem na tela
+    // show text on the screen
     async presentToast(text) {
         const toast = await this.toastController.create({
             message: text,
@@ -37,7 +39,8 @@ export class HomePage {
         toast.present();
     }
 
-    // determina a origem da foto, camera ou galeria.
+    // select the origin of the image. 
+    // Start capture process.
     async selectImage() {
         const actionSheet = await this.actionSheetController.create({
             header: 'Escolha a origem',
@@ -62,8 +65,8 @@ export class HomePage {
         await actionSheet.present();
     }
 
-    // pega foto da biblioteca ou da camera, sende este configuravel.
-    // falta: se não ativiar gps ou não conseguir informações deve cancelar/reiniciar o processo e mostrar mensagem.
+    // Take photo and it's gps(lat,long), with the options declared. 
+    // missing: if gps is not active or can not get information it should cancel/restart the process and show message.
     takePicture(sourceType: PictureSourceType) {
         this.images = '';
         const options: CameraOptions = {
@@ -81,15 +84,15 @@ export class HomePage {
                 this.images = 'data:image/jpeg;base64,' + imagePath;
                 const blob = this.b64toBlob(imagePath, 'image/jpeg');
                 const url = URL.createObjectURL(blob);
-
+                this.foto_data = url;
+            
                 this.geolocation.getCurrentPosition()
-                    .then((resp) => {
-                        // console.log(resp);
-                        this.dados = resp;
+                    .then((resp) => {                        
+                        this.coord = resp;
                         // resp.coords.latitude
                         // resp.coords.longitude
                     }).catch((error) => {
-                        console.log('Error getting location', error);
+                        // console.log('Error getting location', error);
                         this.presentToast('Gps desativado/bloqueado.');
                     });
             }).catch(err => {
@@ -97,6 +100,7 @@ export class HomePage {
             });
     }
 
+    // I don't know what this do. Only that is needed.
     private b64toBlob(b64Data, contentType = '', sliceSize = 512) {
         const byteCharacters = atob(b64Data);
         const byteArrays = [];

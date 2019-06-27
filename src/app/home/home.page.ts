@@ -15,7 +15,7 @@ export class HomePage {
 
     images: any;
     coord: any;
-    foto_data: any;
+    fotoData: any;
 
     constructor(private camera: Camera, private nav: NavController, private actionSheetController: ActionSheetController,
                 private toastController: ToastController, private geolocation: Geolocation, private dataService: DataService
@@ -25,7 +25,7 @@ export class HomePage {
     // store the data, so other views can load it later.
     // call the view informacao.
     onClick() {
-        this.dataService.setData(1, {imagem: this.foto_data, coord: this.dados});
+        this.dataService.setData(1, {imagem: this.fotoData, coords: this.coord});
         this.nav.navigateForward('/informacao/1');
     }
 
@@ -39,7 +39,7 @@ export class HomePage {
         toast.present();
     }
 
-    // select the origin of the image. 
+    // select the origin of the image.
     // Start capture process.
     async selectImage() {
         const actionSheet = await this.actionSheetController.create({
@@ -65,7 +65,7 @@ export class HomePage {
         await actionSheet.present();
     }
 
-    // Take photo and it's gps(lat,long), with the options declared. 
+    // Take photo and it's gps(lat,long), with the options declared.
     // missing: if gps is not active or can not get information it should cancel/restart the process and show message.
     takePicture(sourceType: PictureSourceType) {
         this.images = '';
@@ -73,7 +73,7 @@ export class HomePage {
             // allowEdit: true,
             correctOrientation: true,
             destinationType: this.camera.DestinationType.DATA_URL,
-            quality: 10,
+            quality: 50,
             sourceType,
             saveToPhotoAlbum: false,
             encodingType: this.camera.EncodingType.JPEG,
@@ -82,12 +82,16 @@ export class HomePage {
         this.camera.getPicture(options)
             .then(imagePath => {
                 this.images = 'data:image/jpeg;base64,' + imagePath;
-                const blob = this.b64toBlob(imagePath, 'image/jpeg');
-                const url = URL.createObjectURL(blob);
-                this.foto_data = url;
-            
+                // console.log('imagepath,', imagePath);
+                // console.log(' this.images',  this.images);
+                // const blob = this.b64toBlob(imagePath, 'image/jpeg');
+                // console.log(' blob',  blob);
+                // const url = URL.createObjectURL(blob);
+                // console.log(' url',  url);
+                this.fotoData = imagePath;
+
                 this.geolocation.getCurrentPosition()
-                    .then((resp) => {                        
+                    .then((resp) => {
                         this.coord = resp;
                         // resp.coords.latitude
                         // resp.coords.longitude
